@@ -1,6 +1,6 @@
 # Install Prompt
 
-Copy everything below the line and paste it to your agent (OpenClaw, Claude Code, Codex, or any harness with file access).
+Copy everything below the line and paste it to your agent (Claude Code, Codex, Gemini CLI, OpenClaw, or any harness with file access).
 
 ---
 

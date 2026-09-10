@@ -28,7 +28,7 @@ Memory runtimes ship storage and search (the easy part) and skip editorial polic
 
 ## Quick start: install it on your agent
 
-Copy the entire prompt below and paste it to your agent (OpenClaw, Claude Code, Codex, or any harness with file access). It will build the system for itself, migrating whatever flat memory file it already has.
+Copy the entire prompt below and paste it to your agent (Claude Code, Codex, Gemini CLI, OpenClaw, or any harness with file access). It will build the system for itself, migrating whatever flat memory file it already has.
 
 <details open>
 <summary><strong>📋 The install prompt (copy everything in this block)</strong></summary>
@@ -144,7 +144,7 @@ Git gives you the temporal graph for free: `log` is the validity window, `blame`
 
 ## FAQ
 
-**Does this need OpenClaw?** No. The system is harness-agnostic: any agent that can read and write files can run it (Claude Code, Codex, OpenClaw, custom harnesses). The repo name reflects where it was born.
+**Which agents does this work with?** Any agent that can read and write files: Claude Code, Codex, Gemini CLI, OpenClaw, custom harnesses. The system is files plus editing rules, not software, so there is nothing to be compatible with.
 
 **What about semantic search?** Optional and complementary. Run any index you like over the files — but it locates, it never answers. Answers come from reading the canonical lines.
 
