@@ -157,6 +157,33 @@ test('disk-provenance: added tagged line passes', () => {
   assert.equal(res.status, 0);
 });
 
+test('disk-provenance: tag carrying a date or a source passes', () => {
+  const dir = mkRepo();
+  writeFile(dir, 'MEMORY.md', 'index');
+  writeFile(dir, 'memory/people/wes.md', '# Wes\n');
+  writeConfig(dir, baseConfig());
+  commit(dir, 'baseline');
+  fs.appendFileSync(
+    path.join(dir, 'memory/people/wes.md'),
+    '- [observed 2026-09-11] foo\n- [suggested, Wes 2026-09-11 01:51] bar\n'
+  );
+  const res = runCli(dir);
+  assert.match(res.stdout, /PASS disk-provenance/);
+  assert.equal(res.status, 0);
+});
+
+test('disk-provenance: a word starting with a tag name is not a tag', () => {
+  const dir = mkRepo();
+  writeFile(dir, 'MEMORY.md', 'index');
+  writeFile(dir, 'memory/people/wes.md', '# Wes\n');
+  writeConfig(dir, baseConfig());
+  commit(dir, 'baseline');
+  fs.appendFileSync(path.join(dir, 'memory/people/wes.md'), '- [observedly] foo\n');
+  const res = runCli(dir);
+  assert.match(res.stdout, /FAIL disk-provenance/);
+  assert.equal(res.status, 1);
+});
+
 test('disk-provenance: added untagged line fails with correct line number', () => {
   const dir = mkRepo();
   writeFile(dir, 'MEMORY.md', 'index');

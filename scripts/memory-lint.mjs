@@ -305,8 +305,11 @@ function checkRamCaps(config, root, diff) {
 const FACT_LINE_RE = /^\s*(?:[-*+]|\d+[.)])\s+\S/;
 const STRIKE_RE = /~~[\s\S]*~~/;
 
+// A tag may carry a date or a source after the keyword: [observed],
+// [observed 2026-09-11], [suggested, Wes 2026-09-11 01:51]. The keyword must
+// open the bracket and end on a non-word character, so [observedly] is not a tag.
 function tagRegex(tags) {
-  return new RegExp(`\\[(?:${tags.join('|')})\\]`);
+  return new RegExp(`\\[(?:${tags.join('|')})(?![\\w-])[^\\]]*\\]`);
 }
 
 function checkDiskProvenance(config, root, diff) {
