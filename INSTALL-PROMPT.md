@@ -47,8 +47,18 @@ RULE 4 — Store only what is not re-derivable. Fetched data, generated plans, a
 - When daily notes or the index approach their caps, consolidate in batches: merge overlaps, roll old recurring entries into short dated summaries, leave headroom. Fullness means reorganize, not stop writing.
 - Write things down unprompted whenever: a decision is made, a system changes state, a blocker or mistake is found, a lesson is learned, or the operator states a stable preference. No mental notes. Chat history is not storage.
 
-## 5. Wire it into your instructions
+## 5. Tiers and the machine check
+
+Every file sits in one tier, and the tier decides how it may change:
+- ROM: your standing instructions file, identity files, MEMORY.md. Loaded at boot, changed rarely, hard size caps at or below your harness's boot truncation limit.
+- RAM: memory/context/ and daily notes. Rewritten freely but capped; compact a file over its cap when you touch it.
+- Disk: memory/people/, memory/projects/, memory/decisions/. Tagged fact lines; struck lines are never deleted.
+- Tape: memory/archive/. Frozen; a document enters whole and is never edited after.
+
+If Node 20+ is available, install the checker: copy scripts/memory-lint.mjs from https://github.com/ucsandman/markdown-agent-memory into tools/memory-lint/, and templates/memory-lint.json to your workspace root as memory-lint.json. Add your standing instructions file to the rom files with a cap at or below your harness limit. Run node tools/memory-lint/memory-lint.mjs --no-diff and fix every FAIL. Then add a git pre-commit hook that runs node tools/memory-lint/memory-lint.mjs --staged --quiet and blocks the commit on a non-zero exit, and add the --no-diff run to any recurring health check you have. If Node is not available, skip the checker and say so.
+
+## 6. Wire it into your instructions
 
 Add the rules above to your standing instructions file (AGENTS.md / CLAUDE.md / equivalent) so they apply every session, then test: start a fresh session and verify the index alone is enough to route you, and that a drill-down into one person file and one project file works.
 
-Report back with the directory tree you created and one example line showing a provenance tag.
+Report back with the directory tree you created, one example line showing a provenance tag, and the lint RESULT line.

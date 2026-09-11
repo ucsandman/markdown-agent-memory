@@ -14,6 +14,38 @@ Purpose: make memory reliable enough that the operator never has to remind the a
   - project docs, when the memory belongs with the project itself
 - Any semantic/SQLite/vector index is a lookup aid rebuilt from the files. If index and file disagree, the index is wrong by definition.
 
+## Tiers
+
+Every file in the store sits in one tier, and the tier decides how the file may change. The hardware analogy (ROM, RAM, disk, tape) comes from u/v_uurtjevragen on the r/ClaudeCode thread about this system.
+
+| Tier | Analog | Files | How it may change |
+|---|---|---|---|
+| ROM | firmware | standing instructions (`AGENTS.md` / `CLAUDE.md`), identity files, `MEMORY.md` | Loaded at boot, changed rarely and on purpose, current state only. Hard size caps, because harnesses silently truncate large boot files. |
+| RAM | working memory | `memory/context/`, daily notes | Rewritten freely but capacity-bounded. A file over its cap gets compacted the next time it is touched. Anything durable is flushed to disk. |
+| Disk | permanent storage | `memory/people/`, `memory/projects/`, `memory/decisions/` | Every new fact line carries a provenance tag. Supersession is a strikethrough edit, so struck lines are history and are never deleted. |
+| Tape | archive | `memory/archive/` | Frozen. A document enters whole, when it is retired intact, never as a slice cut from a live file. Never edited after. |
+
+One deliberate difference from the original analogy: permanent memory here is not an append-only ledger. A separate current-state file plus an immutable ledger splits current truth and history into two places and brings back the question "which version is current." Disk files are edited in place with strikethrough, so the file states the current answer and its history in reading order. Git is the append-only journal.
+
+Boot limits worth knowing (checked 2026-09-11): OpenClaw truncates each bootstrap file past `bootstrapMaxChars` (default 20,000) and the whole set past `bootstrapTotalMaxChars` (default 60,000). Claude Code loads only the first 200 lines or 25KB of its auto-memory `MEMORY.md`. Set ROM caps at or below your harness limits.
+
+## Machine Checks
+
+A writer that is only asked to follow rules drifts. `scripts/memory-lint.mjs` (zero dependencies, Node 20+) turns the tier rules into checks that fail loudly. Configure it with `memory-lint.json` at the store root; start from `templates/memory-lint.json`.
+
+| Check | Fails when |
+|---|---|
+| `rom-caps` | a boot file is over its char or line cap, or the boot files together exceed the total |
+| `ram-caps` | a working-memory file changed in this diff is over its cap (untouched ones only warn) |
+| `disk-provenance` | an added fact line in people, projects or decisions has no provenance tag |
+| `disk-history` | a struck-through line was deleted instead of kept |
+| `tape-frozen` | an archived file was modified or deleted |
+| `index-links` | a path in `MEMORY.md` points at nothing |
+
+- Diff checks read only what changed, so an older store with untagged lines passes until those lines are touched. Tag a line when you rewrite it.
+- Every verdict prints how much it checked. A pass over zero lines says zero.
+- Run it in two places: a pre-commit hook (`--staged`) so a bad write cannot land, and the agent's recurring health check (`--no-diff`) so cap drift shows up between commits.
+
 ## Capture Standard
 
 Write things down without being asked when any of these happen:

@@ -77,11 +77,21 @@ RULE 4 — Store only what is not re-derivable. Fetched data, generated plans, a
 - When daily notes or the index approach their caps, consolidate in batches: merge overlaps, roll old recurring entries into short dated summaries, leave headroom. Fullness means reorganize, not stop writing.
 - Write things down unprompted whenever: a decision is made, a system changes state, a blocker or mistake is found, a lesson is learned, or the operator states a stable preference. No mental notes. Chat history is not storage.
 
-## 5. Wire it into your instructions
+## 5. Tiers and the machine check
+
+Every file sits in one tier, and the tier decides how it may change:
+- ROM: your standing instructions file, identity files, MEMORY.md. Loaded at boot, changed rarely, hard size caps at or below your harness's boot truncation limit.
+- RAM: memory/context/ and daily notes. Rewritten freely but capped; compact a file over its cap when you touch it.
+- Disk: memory/people/, memory/projects/, memory/decisions/. Tagged fact lines; struck lines are never deleted.
+- Tape: memory/archive/. Frozen; a document enters whole and is never edited after.
+
+If Node 20+ is available, install the checker: copy scripts/memory-lint.mjs from https://github.com/ucsandman/markdown-agent-memory into tools/memory-lint/, and templates/memory-lint.json to your workspace root as memory-lint.json. Add your standing instructions file to the rom files with a cap at or below your harness limit. Run node tools/memory-lint/memory-lint.mjs --no-diff and fix every FAIL. Then add a git pre-commit hook that runs node tools/memory-lint/memory-lint.mjs --staged --quiet and blocks the commit on a non-zero exit, and add the --no-diff run to any recurring health check you have. If Node is not available, skip the checker and say so.
+
+## 6. Wire it into your instructions
 
 Add the rules above to your standing instructions file (AGENTS.md / CLAUDE.md / equivalent) so they apply every session, then test: start a fresh session and verify the index alone is enough to route you, and that a drill-down into one person file and one project file works.
 
-Report back with the directory tree you created and one example line showing a provenance tag.
+Report back with the directory tree you created, one example line showing a provenance tag, and the lint RESULT line.
 ```
 
 </details>
@@ -93,7 +103,9 @@ That prompt is also in [`INSTALL-PROMPT.md`](INSTALL-PROMPT.md) as a raw file.
 | Path | What it is |
 |---|---|
 | [`INSTALL-PROMPT.md`](INSTALL-PROMPT.md) | The copy-paste prompt above, as a standalone file |
-| [`policy/memory-operating-policy.md`](policy/memory-operating-policy.md) | The full operating policy: capture standard, write rules, promotion gate, retrieval contract, calibration, maintenance |
+| [`policy/memory-operating-policy.md`](policy/memory-operating-policy.md) | The full operating policy: tiers, capture standard, write rules, promotion gate, retrieval contract, calibration, machine checks, maintenance |
+| [`scripts/memory-lint.mjs`](scripts/memory-lint.mjs) | The machine check: boot-file caps, provenance tags on new lines, deleted history, edited archives, dead index paths |
+| [`templates/memory-lint.json`](templates/memory-lint.json) | Lint config: which files sit in which tier, and their caps |
 | [`templates/MEMORY.md`](templates/MEMORY.md) | The routing index, ready to fill in |
 | [`templates/memory/people/PERSON.md`](templates/memory/people/PERSON.md) | Person file with provenance-tagged lines |
 | [`templates/memory/projects/PROJECT.md`](templates/memory/projects/PROJECT.md) | Project file with a supersession example |
@@ -128,6 +140,27 @@ That prompt is also in [`INSTALL-PROMPT.md`](INSTALL-PROMPT.md) as a raw file.
 
 Git gives you the temporal graph for free: `log` is the validity window, `blame` is per-line provenance, `diff` is the supersession edge, `revert` is the restore path.
 
+## Tiers and machine checks
+
+Every file sits in one tier, and the tier decides how it may change. The ROM / RAM / disk / tape framing comes from u/v_uurtjevragen on the r/ClaudeCode thread about this repo.
+
+| Tier | Files | Rule |
+|---|---|---|
+| ROM | instructions file, identity files, `MEMORY.md` | Loaded at boot. Hard caps, because harnesses truncate big boot files without telling the agent |
+| RAM | `memory/context/`, daily notes | Rewritten freely but capped. Durable facts get flushed to disk |
+| Disk | `memory/people/`, `memory/projects/`, `memory/decisions/` | Tagged fact lines. Struck lines are history and never get deleted |
+| Tape | `memory/archive/` | Frozen. Documents enter whole and are never edited |
+
+Rules an LLM is only asked to follow drift, so `scripts/memory-lint.mjs` checks the mechanical half:
+
+```
+node scripts/memory-lint.mjs --root path/to/workspace --staged
+```
+
+It fails on an over-cap boot file, an untagged new fact line, a deleted struck line, an edited archive file, or a dead path in `MEMORY.md`. Every verdict prints how much it checked, so a pass over nothing reads as nothing. Run it as a pre-commit hook and in your agent's recurring health check. Zero dependencies, Node 20+. Details: [Machine Checks](policy/memory-operating-policy.md#machine-checks).
+
+Not adopted from the original analogy: an append-only ledger as permanent memory. It splits current truth and history into two places. Here the disk file holds both in reading order, and git is the append-only journal.
+
 ## Results (7 months of production, not a benchmark)
 
 - **Continuity across models.** Same agent since January 2026 through three frontier models from two vendors. Identity, preferences, and decisions all survived because none of it lives in weights or a vendor's context feature.
@@ -137,7 +170,7 @@ Git gives you the temporal graph for free: `log` is the validity window, `blame`
 
 ## Limitations (stated plainly)
 
-- Only works if the writer follows the policy, and the writer is an LLM. If your agent won't apply editing discipline, a markdown folder degrades like every other store — only more legibly, and legibility is the safety net.
+- Only works if the writer follows the policy, and the writer is an LLM. If your agent won't apply editing discipline, a markdown folder degrades like every other store — only more legibly, and legibility is the safety net. The lint catches the mechanical failures (caps, missing tags, deleted history, edited archives, dead index paths). Whether a tag is honest is still on the writer.
 - Single-agent, single-operator. A fifty-seat team needs real locking and merge discipline (git was built for that problem, but this repo doesn't solve it for you).
 - There is a scale ceiling somewhere past a few hundred daily notes. It hasn't been hit yet; that is not a claim it doesn't exist.
 - n=1. Seven months, one agent, one operator who cares.

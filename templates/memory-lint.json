@@ -1,0 +1,10 @@
+{
+  "index": "MEMORY.md",
+  "tags": ["stated", "observed", "inferred", "suggested"],
+  "tiers": {
+    "rom":  { "files": { "MEMORY.md": { "maxChars": 15000 } }, "totalMaxChars": 60000 },
+    "ram":  { "dirs": ["memory/context"], "patterns": ["^memory/\\d{4}-\\d{2}-\\d{2}.*\\.md$"], "maxChars": 30000 },
+    "disk": { "dirs": ["memory/people", "memory/projects", "memory/decisions"] },
+    "tape": { "dirs": ["memory/archive"] }
+  }
+}

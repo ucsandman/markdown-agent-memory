@@ -1,0 +1,9 @@
+{
+  "name": "markdown-agent-memory",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint:memory": "node scripts/memory-lint.mjs",
+    "test": "node --test \"scripts/*.test.mjs\""
+  }
+}
