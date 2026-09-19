@@ -312,6 +312,16 @@ function tagRegex(tags) {
   return new RegExp(`\\[(?:${tags.join('|')})(?![\\w-])[^\\]]*\\]`);
 }
 
+/** 1-based line number of the closing `---` of a leading frontmatter block, or 0 when the file has none. */
+function frontmatterEndLine(root, relPath) {
+  let text;
+  try { text = fs.readFileSync(path.join(root, relPath), 'utf8'); } catch { return 0; }
+  const lines = text.split(/\r?\n/);
+  if (lines[0] !== '---') return 0;
+  for (let i = 1; i < lines.length; i++) if (lines[i] === '---') return i + 1;
+  return 0;
+}
+
 function checkDiskProvenance(config, root, diff) {
   const dirs = config.tiers.disk && config.tiers.disk.dirs;
   if (!dirs) return { name: 'disk-provenance', status: 'SKIP', summary: 'no disk tier configured', details: [] };
@@ -323,7 +333,10 @@ function checkDiskProvenance(config, root, diff) {
   const filesWithFacts = new Set();
   for (const e of diff.entries) {
     if (!e.newPath || !e.newPath.endsWith('.md') || !inDir(e.newPath, dirs)) continue;
+    // frontmatter is metadata (a block list under `context:` or `metadata:`), never a fact line
+    const fmEnd = frontmatterEndLine(root, e.newPath);
     for (const { line, text } of e.addedLines) {
+      if (line !== null && line <= fmEnd) continue;
       if (!FACT_LINE_RE.test(text)) continue;
       factCount++;
       filesWithFacts.add(e.newPath);
