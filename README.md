@@ -1,3 +1,5 @@
+> **Archived 2026-09-19.** The policy, templates and install prompt now live in [ucsandman/Agnostic-AI](https://github.com/ucsandman/Agnostic-AI) under `packages/markdown-agent-memory`, and the linter under `tools/memory-lint`. This repository is kept for history and receives no further commits.
+
 # Markdown Agent Memory
 
 **A hierarchical, markdown-only memory system for long-running AI agents. Zero dependencies. Seven months in production across three frontier models from two vendors.**
